@@ -2,13 +2,17 @@
 # Versión: 2.0.0
 # Instala y configura el backend de Django
 
+set -euo pipefail
+
 source installer/core/logging.sh
 source installer/core/utils.sh
 source installer/core/error_handling.sh
 
 log_info "Instalando y configurando el backend de Django..."
 
-[ -d venv ] && rm -rf venv
+if [ -d venv ]; then
+  rm -rf venv
+fi
 
 python3 -m venv venv || handle_error "Fallo creando el entorno virtual" 1
 source venv/bin/activate
@@ -21,8 +25,8 @@ if [ ! -d svgviewer ]; then
 fi
 
 if [ -f installer/modules/02_backend/gunicorn.sh ]; then
-  cp installer/modules/02_backend/gunicorn.sh /usr/bin/gunicorn_svgviewer
-  chmod +x /usr/bin/gunicorn_svgviewer
+  cp installer/modules/02_backend/gunicorn.sh /usr/local/bin/gunicorn_svgviewer
+  chmod 750 /usr/local/bin/gunicorn_svgviewer
 fi
 
 deactivate

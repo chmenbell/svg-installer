@@ -1,15 +1,22 @@
 #!/bin/bash
-# Versión: 1.0.0
-# Descripción: Aplica medidas de seguridad a Nginx
+# Versión: 2.0.0
+# Aplica medidas de seguridad a Nginx
+
+set -euo pipefail
 
 source installer/core/logging.sh
 
+NGINX_CONF="/etc/nginx/nginx.conf"
+
 log_info "Aplicando medidas de seguridad a Nginx..."
 
-# Deshabilitar la visualización de la versión de Nginx
-sed -i "s/http {/http {\\n\    server_tokens off;/" /etc/nginx/nginx.conf
+if grep -q "server_tokens off" "$NGINX_CONF"; then
+  log_info "server_tokens off ya está configurado en $NGINX_CONF"
+else
+  sed -i "/http {/a \    server_tokens off;" "$NGINX_CONF"
+  log_info "server_tokens off añadido en $NGINX_CONF"
+fi
 
-# Reiniciar Nginx para aplicar los cambios
 systemctl restart nginx
 
 log_info "Medidas de seguridad aplicadas a Nginx."

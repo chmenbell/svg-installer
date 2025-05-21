@@ -1,20 +1,23 @@
 #!/bin/bash
-# Versión: 1.0.0
-# Descripción: Inicia el servidor Gunicorn
+# Versión: 2.0.0
+# Inicia el servidor Gunicorn para Django
 
-# Navegar al directorio del proyecto Django
-cd svgviewer
+set -euo pipefail
 
-# Activar el entorno virtual
-source /home/chris/svgviewer-installer/venv/bin/activate # Reemplazar con la ruta absoluta a tu entorno virtual
+source installer/core/logging.sh
 
-# Copiar el script gunicorn.sh al directorio /usr/bin
-log_info "Copiando el script gunicorn.sh al directorio /usr/bin..."
-cp /home/chris/svgviewer-installer/gunicorn.sh /usr/bin/gunicorn_svgviewer # Reemplazar con la ruta absoluta a tu script gunicorn.sh
-chmod +x /usr/bin/gunicorn_svgviewer
+PROJECT_DIR="/absolute/path/to/svgviewer" # <--- AJUSTA ESTA RUTA
+VENV_DIR="/absolute/path/to/venv"        # <--- AJUSTA ESTA RUTA
 
-# Iniciar el servidor Gunicorn
+if [ ! -d "$PROJECT_DIR" ] || [ ! -d "$VENV_DIR" ]; then
+  log_error "No se encuentra el directorio del proyecto o del entorno virtual."
+  exit 1
+fi
+
+cd "$PROJECT_DIR"
+source "$VENV_DIR/bin/activate"
+
+log_info "Iniciando Gunicorn para SVGViewer..."
 gunicorn --bind 0.0.0.0:8000 svgviewer.wsgi
 
-# Desactivar el entorno virtual al salir
 deactivate

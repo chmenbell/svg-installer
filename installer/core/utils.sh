@@ -1,8 +1,9 @@
 #!/bin/bash
-# Versión: 1.0.0
-# Descripción: Contiene funciones utilitarias para el instalador
+# Versión: 2.0.0
+# Funciones utilitarias para SVGViewer Installer
 
-# Función para verificar si un comando está instalado
+set -euo pipefail
+
 command_exists() {
   command -v "$1" >/dev/null 2>&1
 }

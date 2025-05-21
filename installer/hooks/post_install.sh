@@ -1,14 +1,14 @@
 #!/bin/bash
-# Versión: 2.0.0
-# Comandos post-instalación
+# Hook de postinstalación para SVGViewer
+set -euo pipefail
 
 source installer/core/logging.sh
-source installer/core/config_manager.sh
 
-log_info "Ejecutando comandos post-instalación..."
+log_info "Ejecutando hook de postinstalación..."
 
-DOMAIN="$(get_config_value DOMAIN)"
-log_info "¡Felicidades! La instalación de SVGViewer se ha completado con éxito."
-log_info "Para acceder a la aplicación, abre un navegador web y navega a https://$DOMAIN"
+if [ -f config/settings.conf ]; then
+  source config/settings.conf
+  log_info "Accede a SVGViewer en: http://$DOMAIN/"
+fi
 
-log_info "Comandos post-instalación completados."
+log_info "Hook de postinstalación completado."
