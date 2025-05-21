@@ -1,24 +1,24 @@
 #!/bin/bash
-# Versión: 1.0.0
-# Descripción: Construye la aplicación React
+# Versión: 2.0.0
+# Construye la aplicación React
+
+set -euo pipefail
 
 source installer/core/logging.sh
 
-log_info "Construyendo la aplicación React..."
+FRONTEND_DIR="/absolute/path/to/frontend" # <--- AJUSTA ESTA RUTA
 
-# Navegar al directorio del frontend
-cd /home/chris/svgviewer-installer/frontend # Reemplazar con la ruta absoluta a tu directorio frontend
-if [ $? -ne 0 ]; then
-  log_error "Error al navegar al directorio del frontend."
+if [ ! -d "$FRONTEND_DIR" ]; then
+  log_error "El directorio del frontend no existe: $FRONTEND_DIR"
   exit 1
 fi
-# Instalar las dependencias
+
+cd "$FRONTEND_DIR"
+
+log_info "Instalando dependencias de frontend..."
 npm install
 
-# Construir la aplicación
+log_info "Construyendo la aplicación React..."
 npm run build
 
-# Volver al directorio principal del instalador
-cd ..
-
-log_info "Aplicación React construida."
+log_info "Aplicación React construida exitosamente."

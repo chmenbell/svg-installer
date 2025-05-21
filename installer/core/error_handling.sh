@@ -1,19 +1,13 @@
 #!/bin/bash
-# Versión: 1.0.0
-# Descripción: Gestiona los errores del instalador
+# Versión: 2.0.0
+# Manejo centralizado de errores
 
+set -euo pipefail
 source installer/core/logging.sh
-source installer/core/utils.sh
 
-# Función para gestionar los errores
 handle_error() {
   local error_message="$1"
-  local error_code="$2"
-
+  local error_code="${2:-1}"
   log_error "$error_message"
-
-  # Realizar acciones adicionales en caso de error
-  # Por ejemplo, enviar un correo electrónico al administrador
-
   exit "$error_code"
 }

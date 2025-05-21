@@ -1,18 +1,26 @@
 #!/bin/bash
-# Versión: 1.0.0
-# Descripción: Funciones de logging para el instalador de SVGViewer
+# Versión: 2.0.0
+# Funciones de logging centralizado para SVGViewer Installer
 
-# Función para registrar información
+set -euo pipefail
+
+RED='\033[0;31m'
+YELLOW='\033[1;33m'
+GREEN='\033[0;32m'
+NC='\033[0m'
+
+timestamp() {
+  date +"%Y-%m-%d %H:%M:%S"
+}
+
 log_info() {
-  echo "[INFO] $1"
+  echo -e "$(timestamp) ${GREEN}[INFO]${NC} $1"
 }
 
-# Función para registrar advertencias
 log_warning() {
-  echo "[WARNING] $1"
+  echo -e "$(timestamp) ${YELLOW}[WARNING]${NC} $1"
 }
 
-# Función para registrar errores
 log_error() {
-  echo "[ERROR] $1"
+  echo -e "$(timestamp) ${RED}[ERROR]${NC} $1"
 }

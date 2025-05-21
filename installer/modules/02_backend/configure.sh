@@ -1,22 +1,28 @@
 #!/bin/bash
-# Versión: 1.0.0
-# Descripción: Configura Django
+# Versión: 2.0.0
+# Configura Django
+
+set -euo pipefail
 
 source installer/core/logging.sh
-source installer/core/config_manager.sh # Añadir esta línea
+source installer/core/config_manager.sh
 source installer/core/error_handling.sh
-source installer/core/utils.sh
 
 log_info "Configurando Django..."
 
-# Generar una clave secreta aleatoria
-SECRET_KEY=$(openssl rand -base64 32)
+SECRET_KEY=$(openssl rand -base64 48)
+SETTINGS_FILE="svgviewer/settings.py"
 
-# Reemplazar el dominio en el archivo settings.py
+if [ ! -f "$SETTINGS_FILE" ]; then
+  handle_error "No se encontró el archivo settings.py en $SETTINGS_FILE" 1
+fi
+
 if [ -n "$(get_config_value DOMAIN)" ]; then
-  sed -i "s/ALLOWED_HOSTS = \[\]/ALLOWED_HOSTS = \['$(get_config_value DOMAIN)'\]/" svgviewer/settings.py # Reemplazar con tu dominio
+  sed -i "s/ALLOWED_HOSTS = \[\]/ALLOWED_HOSTS = \['$(get_config_value DOMAIN)'\]/" "$SETTINGS_FILE"
 else
   handle_error "La variable DOMAIN no está definida en config/settings.conf" 1
 fi
 
-log_info "Django configurado."
+sed -i "s/SECRET_KEY = .*/SECRET_KEY = '$SECRET_KEY'/" "$SETTINGS_FILE"
+
+log_info "Django configurado de forma segura."
