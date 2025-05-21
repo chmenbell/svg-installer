@@ -9,18 +9,26 @@ YELLOW='\033[1;33m'
 GREEN='\033[0;32m'
 NC='\033[0m'
 
+LOGFILE="${SVG_INSTALLER_LOGFILE:-installer.log}"
+
 timestamp() {
   date +"%Y-%m-%d %H:%M:%S"
 }
 
 log_info() {
-  echo -e "$(timestamp) ${GREEN}[INFO]${NC} $1"
+  local msg="$(timestamp) [INFO] $1"
+  echo -e "${GREEN}${msg}${NC}"
+  echo "$msg" >> "$LOGFILE"
 }
 
 log_warning() {
-  echo -e "$(timestamp) ${YELLOW}[WARNING]${NC} $1"
+  local msg="$(timestamp) [WARNING] $1"
+  echo -e "${YELLOW}${msg}${NC}"
+  echo "$msg" >> "$LOGFILE"
 }
 
 log_error() {
-  echo -e "$(timestamp) ${RED}[ERROR]${NC} $1"
+  local msg="$(timestamp) [ERROR] $1"
+  echo -e "${RED}${msg}${NC}"
+  echo "$msg" >> "$LOGFILE"
 }
