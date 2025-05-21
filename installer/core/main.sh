@@ -4,6 +4,13 @@
 
 set -euo pipefail
 
+# Limpiar o rotar log al inicio
+LOGFILE="${SVG_INSTALLER_LOGFILE:-installer.log}"
+if [ -f "$LOGFILE" ]; then
+    mv "$LOGFILE" "${LOGFILE%.*}_$(date '+%Y%m%d_%H%M%S').log"
+fi
+: > "$LOGFILE"
+
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cd "$SCRIPT_DIR/../.."
 
