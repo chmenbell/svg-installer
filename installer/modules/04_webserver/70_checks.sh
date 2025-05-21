@@ -22,4 +22,16 @@ if [ ! -L "/etc/nginx/sites-enabled/svgviewer" ]; then
   handle_error "El enlace simbólico a /etc/nginx/sites-available/svgviewer no existe en /etc/nginx/sites-enabled/." 1
 fi
 
-log_info "Nginx configurado correctamente."
+log_info "Validando la sintaxis de la configuración de Nginx..."
+if ! nginx -t; then
+  handle_error "La validación de la configuración de Nginx (nginx -t) falló." 1
+fi
+log_info "Sintaxis de configuración de Nginx OK."
+
+log_info "Verificando el estado del servicio Nginx..."
+if ! systemctl is-active --quiet nginx; then
+  handle_error "El servicio Nginx no está activo." 1
+fi
+log_info "Servicio Nginx está activo."
+
+log_info "Verificaciones de Nginx completadas exitosamente."
