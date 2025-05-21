@@ -1,0 +1,25 @@
+server {
+    listen 80;
+    server_name your_domain.com; # Reemplazar con tu dominio
+    return 301 https://$host$request_uri;
+}
+
+server {
+    listen 443 ssl;
+    server_name svgviewer.kaffresh.com; # Reemplazar con tu dominio
+
+    ssl_certificate /etc/ssl/certs/nginx-selfsigned.crt;
+    ssl_certificate_key /etc/ssl/private/nginx-selfsigned.key;
+
+    # Servir archivos estáticos de React
+    location /static/ {
+        root /home/chris/svgviewer-installer/frontend/build;
+    }
+
+    # Pasar solicitudes al backend de Django
+    location / {
+        proxy_pass http://localhost:8000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+    }
+}
