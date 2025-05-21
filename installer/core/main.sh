@@ -19,6 +19,45 @@ source installer/core/config_manager.sh
 source installer/core/error_handling.sh
 source installer/core/logging.sh
 
+# Nueva función: Diagnosticar y corregir problemas de permisos en el directorio venv
+check_and_fix_venv_permissions() {
+    local venv_dir="venv"
+
+    log_info "Verificando permisos del directorio $venv_dir..."
+    
+    if [ ! -d "$venv_dir" ]; then
+        log_error "El directorio $venv_dir no existe. Por favor, asegúrate de que la configuración sea correcta."
+        exit 1
+    fi
+
+    # Verificar permisos
+    if [ ! -w "$venv_dir" ]; then
+        log_warning "No se tienen permisos de escritura en $venv_dir. Intentando corregir permisos..."
+        sudo chmod -R 755 "$venv_dir" || {
+            log_error "No se pudieron corregir los permisos de $venv_dir."
+            exit 1
+        }
+        sudo chown -R "$(whoami):$(whoami)" "$venv_dir" || {
+            log_error "No se pudo cambiar el propietario del directorio $venv_dir."
+            exit 1
+        }
+        log_info "Permisos del directorio $venv_dir corregidos exitosamente."
+    else
+        log_info "El directorio $venv_dir ya tiene permisos adecuados."
+    fi
+
+    # Opción para recrear el entorno si es necesario
+    if [ ! -f "$venv_dir/bin/activate" ]; then
+        log_warning "El entorno virtual parece estar corrupto. Recreando el directorio $venv_dir..."
+        rm -rf "$venv_dir"
+        python3 -m venv "$venv_dir" || {
+            log_error "No se pudo recrear el entorno virtual en $venv_dir."
+            exit 1
+        }
+        log_info "El entorno virtual en $venv_dir fue recreado exitosamente."
+    fi
+}
+
 detect_package_manager() {
   for pm in apt-get dnf yum zypper; do
     if command_exists "$pm"; then
@@ -49,6 +88,9 @@ main() {
   check_required_commands
   export PKG_MANAGER=$(detect_package_manager)
   log_info "Gestor de paquetes detectado: $PKG_MANAGER"
+
+  # Llamada a la nueva función de verificación y corrección de permisos
+  check_and_fix_venv_permissions
 
   load_config
 
@@ -90,7 +132,7 @@ run_module() {
   local script_files=()
   while IFS= read -r script_file; do
     script_files+=("$script_file")
-  done < <(find "$module_path" -maxdepth 1 -name "*.sh" -type f -printf "%f\n" | sort)
+  done < <(find "$module_path" -maxdepth 1 -name "*.sh" -type f -printf "%f\\n" | sort)
 
   for script in "${script_files[@]}"; do
     if [ "$module_name" == "03_frontend" ] && [ "$script" == "build.sh" ]; then
