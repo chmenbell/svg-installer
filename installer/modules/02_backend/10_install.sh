@@ -11,6 +11,9 @@ source installer/core/error_handling.sh
 log_info "Instalando y configurando el backend de Django..."
 
 <<<<<<< feature/improve-installer-script-logic
+=======
+<<<<<<< feature/improve-installer-script-logic
+>>>>>>> main
 log_info "Asegurando que python3-pip está instalado..."
 if [ -z "$PKG_MANAGER" ]; then
   handle_error "Variable PKG_MANAGER no definida. No se puede instalar python3-pip." 1
@@ -50,8 +53,11 @@ log_info "Verificación de venv completada (la creación del venv más adelante 
 
 if [ -d venv ]; then
   log_info "Eliminando entorno virtual existente..."
+<<<<<<< feature/improve-installer-script-logic
+=======
 =======
 if [ -d venv ]; then
+>>>>>>> main
 >>>>>>> main
   rm -rf venv
 fi
@@ -72,4 +78,8 @@ if [ -f installer/modules/02_backend/gunicorn.sh ]; then
 fi
 
 deactivate
+<<<<<<< feature/improve-installer-script-logic
 log_info "Backend de Django instalado y configurado."
+=======
+log_info "Backend de Django instalado y configurado."
+>>>>>>> main
