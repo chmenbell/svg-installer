@@ -1,6 +1,10 @@
 #!/bin/bash
-# Versión: 1.0.0
+# Versión: 1.1.0
 # Descripción: Script principal del instalador de SVGViewer
+
+# --- NUEVO: Asegurar rutas relativas correctas ---
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+cd "$SCRIPT_DIR/../.."
 
 # Cargar funciones utilitarias
 source installer/core/utils.sh
@@ -10,6 +14,12 @@ source installer/core/logging.sh
 
 # Función principal de instalación
 main() {
+  # --- NUEVO: Chequeo de root global ---
+  if [[ $EUID -ne 0 ]]; then
+    log_error "Este script debe ser ejecutado como root."
+    exit 1
+  fi
+
   log_info "Iniciando la instalación de SVGViewer..."
 
   # Cargar configuración
@@ -68,47 +78,17 @@ run_module() {
   local module_name="$1"
   log_info "Ejecutando el módulo $module_name..."
 
-  # Ejecutar install.sh
-  if [ -f "installer/modules/$module_name/install.sh" ]; then
-    bash installer/modules/$module_name/install.sh
-  else
-    log_warning "El archivo install.sh no existe en el módulo $module_name."
-  fi
-
-  # Ejecutar checks.sh
-  if [ -f "installer/modules/$module_name/checks.sh" ]; then
-    bash installer/modules/$module_name/checks.sh
-  else
-    log_warning "El archivo checks.sh no existe en el módulo $module_name."
-  fi
-
-  # Ejecutar configure.sh
-  if [ -f "installer/modules/$module_name/configure.sh" ]; then
-    bash installer/modules/$module_name/configure.sh
-  else
-    log_warning "El archivo configure.sh no existe en el módulo $module_name."
-  fi
-
-  # Ejecutar security.sh
-  if [ -f "installer/modules/$module_name/security.sh" ]; then
-    bash installer/modules/$module_name/security.sh
-  else
-    log_warning "El archivo security.sh no existe en el módulo $module_name."
-  fi
-
-  # Ejecutar backups.sh
-  if [ -f "installer/modules/$module_name/backups.sh" ]; then
-    bash installer/modules/$module_name/backups.sh
-  else
-    log_warning "El archivo backups.sh no existe en el módulo $module_name."
-  fi
-
-  # Ejecutar deploy.sh
-  if [ -f "installer/modules/$module_name/deploy.sh" ]; then
-    bash installer/modules/$module_name/deploy.sh
-  else
-    log_warning "El archivo deploy.sh no existe en el módulo $module_name."
-  fi
+  for script in install.sh checks.sh configure.sh security.sh backups.sh deploy.sh; do
+    if [ -f "installer/modules/$module_name/$script" ]; then
+      bash "installer/modules/$module_name/$script"
+      if [ $? -ne 0 ]; then
+        log_error "El script $script falló en el módulo $module_name."
+        exit 1
+      fi
+    else
+      log_warning "El archivo $script no existe en el módulo $module_name."
+    fi
+  done
 }
 
 run_prerequisites() {
@@ -127,6 +107,10 @@ run_frontend() {
   # Ejecutar build.sh
   if [ -f "installer/modules/03_frontend/build.sh" ]; then
     bash installer/modules/03_frontend/build.sh
+    if [ $? -ne 0 ]; then
+      log_error "El script build.sh falló en el módulo 03_frontend."
+      exit 1
+    fi
   else
     log_warning "El archivo build.sh no existe en el módulo 03_frontend."
   fi
