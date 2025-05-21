@@ -49,6 +49,16 @@ check_and_fix_venv_permissions() {
     # Opción para recrear el entorno si es necesario
     if [ ! -f "$venv_dir/bin/activate" ]; then
         log_warning "El entorno virtual parece estar corrupto. Recreando el directorio $venv_dir..."
+        
+        # Verificar si python3-venv está instalado
+        if ! dpkg -l | grep -q python3-venv; then
+            log_warning "El paquete python3-venv no está instalado. Intentando instalarlo..."
+            sudo apt-get update && sudo apt-get install -y python3-venv || {
+                log_error "No se pudo instalar el paquete python3-venv. Verifica tu configuración del sistema."
+                exit 1
+            }
+        fi
+
         rm -rf "$venv_dir"
         python3 -m venv "$venv_dir" || {
             log_error "No se pudo recrear el entorno virtual en $venv_dir."
