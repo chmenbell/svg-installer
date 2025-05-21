@@ -24,7 +24,7 @@ detect_package_manager() {
 }
 
 check_required_commands() {
-  local cmds=(sudo bash curl git python3 pip3 npm)
+  local cmds=(sudo bash curl git python3)
   for cmd in "${cmds[@]}"; do
     if ! command_exists "$cmd"; then
       log_error "El comando requerido '$cmd' no está instalado. Por favor instálalo antes de continuar."
