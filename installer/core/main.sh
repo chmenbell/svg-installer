@@ -1,83 +1,75 @@
 #!/bin/bash
-# Versión: 1.1.0
-# Descripción: Script principal del instalador de SVGViewer
+# Versión: 2.0.0
+# Script principal del instalador de SVGViewer
 
-# --- NUEVO: Asegurar rutas relativas correctas ---
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cd "$SCRIPT_DIR/../.."
 
-# Cargar funciones utilitarias
 source installer/core/utils.sh
 source installer/core/config_manager.sh
 source installer/core/error_handling.sh
 source installer/core/logging.sh
 
-# Función principal de instalación
+detect_package_manager() {
+  if command -v apt-get &>/dev/null; then
+    echo "apt-get"
+  elif command -v dnf &>/dev/null; then
+    echo "dnf"
+  elif command -v yum &>/dev/null; then
+    echo "yum"
+  elif command -v zypper &>/dev/null; then
+    echo "zypper"
+  else
+    log_error "No se encontró un gestor de paquetes soportado (apt, dnf, yum, zypper)."
+    exit 1
+  fi
+}
+
+check_required_commands() {
+  local cmds=(sudo bash curl git python3 pip3 npm)
+  for cmd in "${cmds[@]}"; do
+    if ! command -v "$cmd" &>/dev/null; then
+      log_error "El comando requerido '$cmd' no está instalado. Por favor instálalo antes de continuar."
+      exit 1
+    fi
+  done
+}
+
 main() {
-  # --- NUEVO: Chequeo de root global ---
   if [[ $EUID -ne 0 ]]; then
     log_error "Este script debe ser ejecutado como root."
     exit 1
   fi
 
-  log_info "Iniciando la instalación de SVGViewer..."
+  check_required_commands
+  export PKG_MANAGER=$(detect_package_manager)
+  log_info "Gestor de paquetes detectado: $PKG_MANAGER"
 
-  # Cargar configuración
   load_config
 
-  # Ejecutar script pre-instalación
-  if [ -f "installer/hooks/pre_install.sh" ]; then
-    log_info "Ejecutando script pre-instalación..."
-    bash installer/hooks/pre_install.sh
-  else
-    log_warning "El archivo pre_install.sh no existe."
-  fi
+  [ -f "installer/hooks/pre_install.sh" ] && bash installer/hooks/pre_install.sh
 
-  # Ejecutar módulos de instalación
   run_prerequisites
   run_database
   run_backend
   run_frontend
   run_webserver
 
-  # Ejecutar script post-instalación
-  if [ -f "installer/hooks/post_install.sh" ]; then
-    log_info "Ejecutando script post-instalación..."
-    bash installer/hooks/post_install.sh
-  else
-    log_warning "El archivo post_install.sh no existe."
-  fi
+  [ -f "installer/hooks/post_install.sh" ] && bash installer/hooks/post_install.sh
 
-  # Ejecutar pruebas de integración
-  log_info "Ejecutando pruebas de integración..."
-  for test_script in tests/integration/*.sh; do
-    if [ -f "$test_script" ]; then
-      log_info "Ejecutando $test_script..."
-      bash "$test_script"
-    else
-      log_warning "El archivo $test_script no existe."
-    fi
-  done
-
-  # Ejecutar pruebas de validación
-  log_info "Ejecutando pruebas de validación..."
-  for test_script in tests/validation/*.sh; do
-    if [ -f "$test_script" ]; then
-      log_info "Ejecutando $test_script..."
-      bash "$test_script"
-    else
-      log_warning "El archivo $test_script no existe."
+  for test_dir in tests/integration tests/validation; do
+    if [ -d "$test_dir" ]; then
+      for test_script in $test_dir/*.sh; do
+        [ -f "$test_script" ] && bash "$test_script"
+      done
     fi
   done
 
   log_info "Instalación de SVGViewer completada."
 }
 
-# Funciones para ejecutar los módulos
 run_module() {
   local module_name="$1"
-  log_info "Ejecutando el módulo $module_name..."
-
   for script in install.sh checks.sh configure.sh security.sh backups.sh deploy.sh; do
     if [ -f "installer/modules/$module_name/$script" ]; then
       bash "installer/modules/$module_name/$script"
@@ -85,40 +77,18 @@ run_module() {
         log_error "El script $script falló en el módulo $module_name."
         exit 1
       fi
-    else
-      log_warning "El archivo $script no existe en el módulo $module_name."
     fi
   done
 }
-
-run_prerequisites() {
-  run_module "00_prerequisites"
-}
-
-run_database() {
-  run_module "01_database"
-}
-
-run_backend() {
-  run_module "02_backend"
-}
-
+run_prerequisites() { run_module "00_prerequisites"; }
+run_database()      { run_module "01_database"; }
+run_backend()       { run_module "02_backend"; }
 run_frontend() {
-  # Ejecutar build.sh
   if [ -f "installer/modules/03_frontend/build.sh" ]; then
     bash installer/modules/03_frontend/build.sh
-    if [ $? -ne 0 ]; then
-      log_error "El script build.sh falló en el módulo 03_frontend."
-      exit 1
-    fi
-  else
-    log_warning "El archivo build.sh no existe en el módulo 03_frontend."
+    [ $? -ne 0 ] && log_error "El script build.sh falló en el módulo 03_frontend." && exit 1
   fi
 }
+run_webserver()     { run_module "04_webserver"; }
 
-run_webserver() {
-  run_module "04_webserver"
-}
-
-# Ejecutar la función principal
 main "$@"

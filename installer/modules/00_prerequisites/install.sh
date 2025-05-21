@@ -1,16 +1,24 @@
 #!/bin/bash
-# Versión: 1.1.0
-# Descripción: Instala los requisitos previos del sistema
+# Versión: 2.0.0
+# Instala los requisitos previos del sistema
+
 source installer/core/logging.sh
 source installer/core/error_handling.sh
 
 log_info "Actualizando el sistema..."
-apt-get update || handle_error "Fallo al actualizar el sistema" 1
+case "$PKG_MANAGER" in
+  apt-get) apt-get update ;;
+  dnf) dnf makecache ;;
+  yum) yum makecache ;;
+  zypper) zypper refresh ;;
+  *) log_error "Gestor de paquetes no soportado: $PKG_MANAGER"; exit 1 ;;
+esac || handle_error "Fallo al actualizar el sistema" 1
 
 log_info "Instalando dependencias..."
-apt-get install -y \
-  software-properties-common \
-  python3-pip \
-  nginx || handle_error "Fallo instalando dependencias" 1
+case "$PKG_MANAGER" in
+  apt-get) apt-get install -y software-properties-common python3-pip nginx postgresql postgresql-contrib ;;
+  dnf|yum) $PKG_MANAGER install -y python3-pip nginx postgresql ;;
+  zypper) zypper install -y python3-pip nginx postgresql ;;
+esac || handle_error "Fallo instalando dependencias" 1
 
 log_info "Requisitos previos instalados."
